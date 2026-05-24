@@ -1,6 +1,10 @@
 {
     "urls": [
         {
+            "name": "💛澜露💖梁雨轩",
+            "url": "https://raw.giteeusercontent.com/hulanlu/04/raw/master/lanlu.json"
+        },
+        {
             "name": "💛肥猫💖梁雨轩",
             "url": "http://肥猫.net/tv"
         },
@@ -84,10 +88,7 @@
             "name": "💛东篱3💖梁雨轩",
             "url": "https://cnb.cool/aooooowuuuuu/FreeSpider/-/git/raw/main/config"
         },
-        {
-            "name": "💛澜露1💖梁雨轩",
-            "url": "https://raw.giteeusercontent.com/hulanlu/04/raw/master/lanlu.json"
-        },
+        
         {
             "name": "💛澜露2💖梁雨轩",
             "url": "https://gitee.com/hulanlu/04/raw/master/lanlu.json"
