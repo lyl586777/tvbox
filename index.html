@@ -1,259 +1,277 @@
-
 <!DOCTYPE html>
-<html>
-<head> 
-<meta charset="utf-8">
-<meta http-equiv="Cache-Control" content="no-siteapp" />
-<meta http-equiv="Cache-Control" content="no-transform" />
-<meta name="applicable-device" content="pc,mobile">
-<meta name="viewport"  content="width=device-width, initial-scale=1" />
-<title>梁雨轩桌面时钟</title>
-<meta name="keywords" content="桌面时钟,在线时钟,极简时钟,时钟同步" />
-<meta name="description" content="北京时间网提供桌面时钟，在线极简同步时钟。" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<style type="text/css">
-a:link {
-	color: #FFF;
-}
-a:visited {
-	color: #FFF;
-}
-a:hover {
-	color: #F90;
-}
-a:active {
-	color: #FFF;
-}
-</style>
-</head> 
-<body> 
-<p>
-  <style>
-body {
-	background: #000
-}
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTProto  梁雨轩  代理列表 - 实时监控面板</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .proxy-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-.clock {
-	position: absolute;
-	opacity: 1
-}
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 mb-8 border-b border-slate-200">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-3">
+                    <i class="fa-brands fa-telegram text-sky-500 text-4xl"></i>
+                    MTProto Proxy Panel
+                </h1>
+                <p class="text-slate-500 mt-1">数据通过 030101.xyz 代理节点实时同步</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center gap-3">
+                <span id="updateTime" class="text-xs bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full font-mono">
+                    更新时间: --:--:--
+                </span>
+                <button id="refreshBtn" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> 刷新数据
+                </button>
+            </div>
+        </header>
 
-.fill .clock {
-	left: 50%;
-	top: 50%
-}
+        <div class="bg-white p-4 rounded-xl shadow-xs mb-6 flex flex-col md:flex-row gap-4 justify-between items-center border border-slate-100">
+            <div class="relative w-full md:w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="搜索国家、节点名或IP..." class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-sm">
+            </div>
+            <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                <button data-filter="all" class="filter-btn bg-sky-50 text-sky-600 px-4 py-1.5 rounded-lg text-sm font-medium border border-sky-100 cursor-pointer whitespace-nowrap">全部节点</button>
+                <button data-filter="online" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap">在线</button>
+                <button data-filter="slow" class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap">延迟高</button>
+            </div>
+        </div>
 
-.centre {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 0;
-	height: 0
-}
+        <div id="loadingState" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl h-44 animate-pulse border border-slate-100"></div>
+            <div class="bg-white p-6 rounded-2xl h-44 animate-pulse border border-slate-100"></div>
+            <div class="bg-white p-6 rounded-2xl h-44 animate-pulse border border-slate-100"></div>
+        </div>
 
-.expand {
-	position: absolute;
-	top: 0;
-	left: 0;
-	transform: translate(-50%, -50%)
-}
+        <div id="proxyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+            </div>
 
-.anchor {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 0;
-	height: 0
-}
+        <div id="emptyState" class="hidden text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
+            <i class="fa-solid fa-box-open text-slate-300 text-5xl mb-3"></i>
+            <p class="text-slate-400">未找到符合条件的代理节点</p>
+        </div>
+    </div>
 
-.element {
-	position: absolute;
-	top: 0;
-	left: 0
-}
+    <div id="qrModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-sm w-full mx-4 shadow-xl text-center relative">
+            <button id="closeModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="font-bold text-lg text-slate-900 mb-2" id="qrTitle">扫描二维码连接</h3>
+            <p class="text-xs text-slate-500 mb-4">使用移动端扫描或直接点击连入</p>
+            <div id="qrcode" class="flex justify-center p-4 bg-slate-50 rounded-xl mb-4"></div>
+            <a id="qrLink" href="#" class="block w-full bg-sky-500 hover:bg-sky-600 text-white text-center py-2.5 rounded-lg font-medium transition">
+                直接连接 Telegram
+            </a>
+        </div>
+    </div>
 
-.round {
-	border-radius: 296px
-}
+    <script>
+        // 目标 API 地址
+        const TARGET_URL = 'https://www.mtproto.shop/proxies.json';
+        // 拼接上你提供的跨域代理前缀
+        const API_URL = `https://proxy.api.030101.xyz/${TARGET_URL}`;
+        
+        let allProxies = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
 
-.circle-1 {
-	background: green;
-	width: 12px;
-	height: 12px
-}
+        // DOM 节点缓存
+        const proxyGrid = document.getElementById('proxyGrid');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const updateTimeSpan = document.getElementById('updateTime');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const qrModal = document.getElementById('qrModal');
+        const qrcodeContainer = document.getElementById('qrcode');
 
-.circle-2 {
-	background: #fa9f22;
-	width: 8px;
-	height: 8px
-}
+        // 获取数据
+        async function fetchProxies() {
+            showLoading(true);
+            try {
+                // 通过跨域代理 fetch 数据，并加参数防止代理端缓存
+                const response = await fetch(`${API_URL}?t=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) throw new Error('API 请求失败');
+                
+                const data = await response.json();
+                
+                // 解构数据
+                allProxies = Array.isArray(data) ? data : (data.proxies || []);
+                
+                // 渲染时间
+                if (data.updated_at) {
+                    const date = new Date(data.updated_at);
+                    updateTimeSpan.innerText = `更新时间: ${date.toLocaleTimeString()}`;
+                } else {
+                    updateTimeSpan.innerText = `同步时间: ${new Date().toLocaleTimeString()}`;
+                }
 
-.circle-3 {
-	background: #000;
-	width: 4px;
-	height: 4px
-}
+                renderList();
+            } catch (error) {
+                console.error(error);
+                alert('获取数据失败，请确认跨域代理服务正常运作。');
+            } finally {
+                showLoading(false);
+            }
+        }
 
-.second {
-	transform: rotate(180deg)
-}
+        // 渲染列表
+        function renderList() {
+            const filtered = allProxies.filter(item => {
+                const matchesSearch = 
+                    item.location.toLowerCase().includes(searchQuery) ||
+                    item.server.toLowerCase().includes(searchQuery) ||
+                    (item.domain && item.domain.toLowerCase().includes(searchQuery));
+                
+                const matchesFilter = 
+                    currentFilter === 'all' || 
+                    item.status === currentFilter;
 
-.minute {
-	transform: rotate(54deg)
-}
+                return matchesSearch && matchesFilter;
+            });
 
-.second-hand {
-	width: 2px;
-	height: 164px;
-	background: red;
-	transform: translate(-50%, -100%) translateY(24px)
-}
+            if (filtered.length === 0) {
+                proxyGrid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
 
-.hour {
-	transform: rotate(304.5deg)
-}
+            emptyState.classList.add('hidden');
+            proxyGrid.classList.remove('hidden');
+            proxyGrid.innerHTML = '';
 
-.thin-hand {
-	width: 4px;
-	height: 50px;
-	background: green;
-	transform: translate(-50%, -100%)
-}
+            filtered.forEach(proxy => {
+                // 动态构建 Deep-Link
+                const host = proxy.domain || proxy.server;
+                const deepLink = proxy.link || `tg://proxy?server=${host}&port=${proxy.port}&secret=${proxy.secret}`;
+                
+                // 状态徽章
+                let statusBadge = `<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs px-2 py-0.5 rounded-md font-medium">在线</span>`;
+                if (proxy.status === 'slow') {
+                    statusBadge = `<span class="bg-amber-50 text-amber-600 border border-amber-200 text-xs px-2 py-0.5 rounded-md font-medium">高延迟</span>`;
+                } else if (proxy.status === 'offline') {
+                    statusBadge = `<span class="bg-rose-50 text-rose-600 border border-rose-200 text-xs px-2 py-0.5 rounded-md font-medium">离线</span>`;
+                }
 
-.fat-hand {
-	width: 10px;
-	height: 57px;
-	border-radius: 10px;
-	background: blue;
-	transform: translate(-50%, -100%) translateY(-18px)
-}
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-5 border border-slate-100 shadow-xs proxy-card transition duration-200 flex flex-col justify-between';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${proxy.flag || '🌐'}</span>
+                                <h3 class="font-bold text-slate-800 text-md truncate max-w-[160px]">${proxy.location}</h3>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                ${statusBadge}
+                                <span class="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${proxy.ping || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1 text-xs font-mono text-slate-500 bg-slate-50 p-2.5 rounded-xl mb-4 border border-slate-100">
+                            <div class="flex justify-between"><span class="text-slate-400">服务器:</span> <span class="text-slate-700 truncate max-w-[180px]">${host}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">端　口:</span> <span class="text-slate-700">${proxy.port}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">密　钥:</span> <span class="text-slate-700 truncate max-w-[150px]" title="${proxy.secret}">${proxy.secret}</span></div>
+                        </div>
+                    </div>
 
-.minute-hand {
-	height: 112px
-}
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
+                        <a href="${deepLink}" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 rounded-lg text-center transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-bolt"></i> 连接
+                        </a>
+                        <button onclick="copyToClipboard('${deepLink}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg transition text-center cursor-pointer flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-copy"></i> 复制
+                        </button>
+                        <button onclick="showQRCode('${deepLink}', '${proxy.location}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-lg transition text-center cursor-pointer flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-qrcode"></i> 二维码
+                        </button>
+                    </div>
+                `;
+                proxyGrid.appendChild(card);
+            });
+        }
 
-.hour-text {
-	position: absolute;
-	font: 40px Hei, Helvetica, Arial, sans-serif;
-	color: #b2d235;
-	transform: translate(-50%, -50%)
-}
+        // 状态控制
+        function showLoading(isLoading) {
+            if (isLoading) {
+                loadingState.classList.remove('hidden');
+                proxyGrid.classList.add('hidden');
+                emptyState.classList.add('hidden');
+                refreshBtn.disabled = true;
+                refreshBtn.classList.add('opacity-50');
+            } else {
+                loadingState.classList.add('hidden');
+                refreshBtn.disabled = false;
+                refreshBtn.classList.remove('opacity-50');
+            }
+        }
 
-.hour-10 {
-	padding-left: .4ex
-}
+        // 复制功能
+        window.copyToClipboard = function(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('代理一键连接链接已复制到剪贴板！');
+            }).catch(err => {
+                console.error('无法复制: ', err);
+            });
+        }
 
-.hour-11 {
-	padding-left: .25ex
-}
+        // 弹出二维码
+        window.showQRCode = function(link, name) {
+            qrcodeContainer.innerHTML = '';
+            document.getElementById('qrTitle').innerText = `${name} - 节点扫描`;
+            document.getElementById('qrLink').href = link;
+            
+            new QRCode(qrcodeContainer, {
+                text: link,
+                width: 180,
+                height: 180,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            qrModal.classList.remove('hidden');
+        }
 
-.minute-text {
-	position: absolute;
-	font: 12px Avenir Next, Helvetica, Arial, sans-serif;
-	color: green;
-	transform: translate(-50%, -50%)
-}
+        // 事件监听
+        refreshBtn.addEventListener('click', fetchProxies);
+        
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            renderList();
+        });
 
-.minute-line {
-	background: #fff;
-	width: 1px;
-	height: 9px;
-	transform: translate(-50%, -100%) translateY(-131px);
-	opacity: .34
-}
-</style>
-<a href="https://www.beijing-time.org/"></a><a href="https://www.beijing-time.org/riqi.htm"></a>
-<div class="fill">
-<div class="reference"></div>
-<div class="clock" id="utility-clock">
-<div class="centre">
-<div class="dynamic"></div>
-<div class="expand round circle-1"></div>
-<div class="anchor hour">
-<div class="element thin-hand"></div>
-<div class="element fat-hand"></div>
-</div>
-<div class="anchor minute">
-<div class="element thin-hand"></div>
-<div class="element fat-hand minute-hand"></div>
-</div>
-<div class="anchor second">
-<div class="element second-hand"></div>
-</div>
-<div class="expand round circle-2"></div>
-<div class="expand round circle-3"></div>
-</div>
-</div>
-</div>
-<script>
-var clock = document.querySelector('#utility-clock')
-utilityClock(clock)
-if (clock.parentNode.classList.contains('fill')) autoResize(clock, 295 + 32)
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                filterBtns.forEach(b => b.className = 'filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer whitespace-nowrap');
+                e.target.className = 'filter-btn bg-sky-50 text-sky-600 px-4 py-1.5 rounded-lg text-sm font-medium border border-sky-100 cursor-pointer whitespace-nowrap';
+                currentFilter = e.target.getAttribute('data-filter');
+                renderList();
+            });
+        });
 
-function utilityClock(container) {
-	var dynamic = container.querySelector('.dynamic')
-	var hourElement = container.querySelector('.hour')
-	var minuteElement = container.querySelector('.minute')
-	var secondElement = container.querySelector('.second')
-	var minute = function(n) {
-		return n % 5 == 0 ? minuteText(n) : minuteLine(n)
-	}
-	var minuteText = function(n) {
-		var element = document.createElement('div')
-		element.className = 'minute-text'
-		element.innerHTML = (n < 10 ? '0' : '') + n
-		position(element, n / 60, 135)
-		dynamic.appendChild(element)
-	}
-	var minuteLine = function(n) {
-		var anchor = document.createElement('div')
-		anchor.className = 'anchor'
-		var element = document.createElement('div')
-		element.className = 'element minute-line'
-		rotate(anchor, n)
-		anchor.appendChild(element)
-		dynamic.appendChild(anchor)
-	}
-	var hour = function(n) {
-		var element = document.createElement('div')
-		element.className = 'hour-text hour-' + n
-		element.innerHTML = n
-		position(element, n / 12, 105)
-		dynamic.appendChild(element)
-	}
-	var position = function(element, phase, r) {
-		var theta = phase * 2 * Math.PI
-		element.style.top = (-r * Math.cos(theta)).toFixed(1) + 'px'
-		element.style.left = (r * Math.sin(theta)).toFixed(1) + 'px'
-	}
-	var rotate = function(element, second) {
-		element.style.transform = element.style.webkitTransform = 'rotate(' + (second * 6) + 'deg)'
-	}
-	var animate = function() {
-		var now = new Date()
-		var time = now.getHours() * 3600 +
-			now.getMinutes() * 60 +
-			now.getSeconds() * 1 +
-			now.getMilliseconds() / 1000
-		rotate(secondElement, time)
-		rotate(minuteElement, time / 60)
-		rotate(hourElement, time / 60 / 12)
-		requestAnimationFrame(animate)
-	}
-	for (var i = 1; i <= 60; i++) minute(i)
-	for (var i = 1; i <= 12; i++) hour(i)
-	animate()
-}
+        document.getElementById('closeModal').addEventListener('click', () => {
+            qrModal.classList.add('hidden');
+        });
+        
+        qrModal.addEventListener('click', (e) => {
+            if (e.target === qrModal) qrModal.classList.add('hidden');
+        });
 
-function autoResize(element, nativeSize) {
-	var update = function() {
-		var scale = Math.min(window.innerWidth, window.innerHeight) / nativeSize
-		element.style.transform = element.style.webkitTransform = 'scale(' + scale.toFixed(3) + ')'
-	}
-	update()
-	window.addEventListener('resize', update)
-}
-</script>
-<script language="javascript" type="text/javascript" src="//www.beijing-time.org/t.js"></script>
+        // 首次初始化
+        fetchProxies();
+    </script>
 </body>
 </html>
